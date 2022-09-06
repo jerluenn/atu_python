@@ -1,0 +1,102 @@
+import sys
+sys.path.insert(0, '../../utils')
+import os
+import shutil
+
+from acados_template import AcadosModel
+from acados_template import AcadosOcp, AcadosOcpSolver, AcadosSimSolver, AcadosSim
+from casadi import *
+
+import numpy as np
+
+import time
+import tetherunit, rod_parameterbuilder
+from matplotlib import pyplot as plt
+
+class atu_solver:
+
+    def __init__(self, robot_dict): 
+
+        self.build_tetherObject(robot_dict)
+        self.boundary_length = robot_dict['tether_length'] # used for plotting
+        self.integration_steps = robot_dict['integration_steps']
+        self.createSolver()
+
+    def build_tetherObject(self, robot_dict): 
+
+        builder = rod_parameterbuilder.Rod_Parameter_Builder()
+        builder.createHollowRod(robot_dict)
+        try:
+            self.tetherObject = tetherunit.TetherUnit(builder, sys.argv[1])
+        except: 
+            self.tetherObject = tetherunit.TetherUnit(builder)
+
+    def createSolver(self):
+
+        self.ocp = AcadosOcp()
+        self.ocp.model = self.tetherObject.model
+        nx = self.tetherObject.model.x.size()[0]
+        nu = self.tetherObject.model.u.size()[0]
+        ny = nx + nu
+
+        self.ocp.dims.N = self.integration_steps
+        # self.ocp.cost.cost_type_0 = 'LINEAR_LS'
+        self.ocp.cost.cost_type = 'LINEAR_LS'
+        self.ocp.cost.cost_type_e = 'LINEAR_LS'
+        self.ocp.cost.W_e = np.identity(nx)
+        self.ocp.cost.W = np.zeros((ny, ny))
+        self.ocp.cost.Vx = np.zeros((ny, nx))
+        self.ocp.cost.Vx_e = np.zeros((nx, nx))
+        self.ocp.cost.Vx_e[0:7, 0:7] = np.identity(7)
+        self.ocp.cost.yref  = np.zeros((ny, ))
+        self.ocp.cost.yref_e = np.zeros((nx))
+        self.ocp.cost.Vu = np.zeros((ny, nu))
+        self.ocp.solver_options.qp_solver_iter_max = 400
+        # self.ocp.solver_options.levenberg_marquardt = 1000.0
+
+        self.ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # FULL_CONDENSING_QPOASES
+        # PARTIAL_CONDENSING_HPIPM, FULL_CONDENSING_QPOASES, FULL_CONDENSING_HPIPM,
+        # PARTIAL_CONDENSING_QPDUNES, PARTIAL_CONDENSING_OSQP, FULL_CONDENSING_DAQP
+        self.ocp.solver_options.hessian_approx = 'GAUSS_NEWTON'
+        self.ocp.solver_options.integrator_type = 'ERK'
+        # ocp.solver_options.print_level = 1
+        self.ocp.solver_options.nlp_solver_type = 'SQP_RTI' # SQP_RTI, SQP
+        self.ocp.solver_options.tf = self.boundary_length
+
+        self.ocp.constraints.idxbx_0 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
+
+        self.ocp.constraints.lbx_0 = np.array([0, 0, 0, 1, 0, 0, 0, #pose at start.
+            -5, -5, -5, -5, -5, -5, # internal forces at start.
+            0, 0, 0.05, 0]) #tau, alpha, kappa, curvature
+
+        self.ocp.constraints.ubx_0 = np.array([0, 0, 0, 1, 0, 0, 0, #pose at start.
+            5, 5, 5, 5, 5, 5, # internal forces at start.
+            0, 0, 0.05, 0]) #tau, alpha, kappa, curvature
+
+        self.ocp.solver_options.nlp_solver_max_iter = 200
+
+        solver = AcadosOcpSolver(self.ocp, json_file=f'{self.ocp.model.name}.json')
+
+        return solver
+
+if __name__ == "__main__":
+
+    robot_dict = {}
+    robot_dict['type'] = 'hollow_rod'
+    robot_dict['outer_radius'] = 0.002
+    robot_dict['inner_radius'] = 0.0006
+    robot_dict['elastic_modulus'] = 1.80e9
+    robot_dict['mass_distribution'] = 0.035
+    robot_dict['tether_length'] = 3.1
+    robot_dict['shear_modulus'] = 0.75e9
+    robot_dict['integration_steps'] = 10000
+
+    solver_obj = atu_solver(robot_dict)
+    solver = solver_obj.createSolver()
+    yref = np.zeros((17, ))
+    yref[0:7] = -2.5, 0, 1.2, 1, 0, 0, 0
+    solver.cost_set(robot_dict['integration_steps'], 'yref', yref)
+    solver.solve()
+    print(solver.get(0, "x"))
+    print(solver.get(50, "x"))
+    print(solver.get_cost())
