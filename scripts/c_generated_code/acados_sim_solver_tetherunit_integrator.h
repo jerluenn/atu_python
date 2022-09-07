@@ -37,7 +37,7 @@
 #include "acados_c/sim_interface.h"
 #include "acados_c/external_function_interface.h"
 
-#define TETHERUNIT_INTEGRATOR_NX     17
+#define TETHERUNIT_INTEGRATOR_NX     13
 #define TETHERUNIT_INTEGRATOR_NZ     0
 #define TETHERUNIT_INTEGRATOR_NU     1
 #define TETHERUNIT_INTEGRATOR_NP     0

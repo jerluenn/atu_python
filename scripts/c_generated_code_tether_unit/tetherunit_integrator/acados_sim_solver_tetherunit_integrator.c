@@ -77,7 +77,7 @@ int tetherunit_integrator_acados_sim_create(sim_solver_capsule * capsule)
     bool tmp_bool;
 
     
-    double Tsim = 3.1;
+    double Tsim = 1;
 
     
     // explicit ode
@@ -129,7 +129,7 @@ int tetherunit_integrator_acados_sim_create(sim_solver_capsule * capsule)
 
     tmp_int = 4;
     sim_opts_set(tetherunit_integrator_sim_config, tetherunit_integrator_sim_opts, "num_stages", &tmp_int);
-    tmp_int = 10000;
+    tmp_int = 20;
     sim_opts_set(tetherunit_integrator_sim_config, tetherunit_integrator_sim_opts, "num_steps", &tmp_int);
 
     // options that are not available to AcadosOcpSolver
@@ -171,8 +171,8 @@ int tetherunit_integrator_acados_sim_create(sim_solver_capsule * capsule)
 
     /* initialize input */
     // x
-    double x0[17];
-    for (int ii = 0; ii < 17; ii++)
+    double x0[13];
+    for (int ii = 0; ii < 13; ii++)
         x0[ii] = 0.0;
 
     sim_in_set(tetherunit_integrator_sim_config, tetherunit_integrator_sim_dims,
@@ -188,11 +188,11 @@ int tetherunit_integrator_acados_sim_create(sim_solver_capsule * capsule)
                tetherunit_integrator_sim_in, "u", u0);
 
     // S_forw
-    double S_forw[306];
-    for (int ii = 0; ii < 306; ii++)
+    double S_forw[182];
+    for (int ii = 0; ii < 182; ii++)
         S_forw[ii] = 0.0;
-    for (int ii = 0; ii < 17; ii++)
-        S_forw[ii + ii * 17 ] = 1.0;
+    for (int ii = 0; ii < 13; ii++)
+        S_forw[ii + ii * 13 ] = 1.0;
 
 
     sim_in_set(tetherunit_integrator_sim_config, tetherunit_integrator_sim_dims,

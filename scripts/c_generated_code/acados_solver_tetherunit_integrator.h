@@ -37,13 +37,13 @@
 #include "acados_c/ocp_nlp_interface.h"
 #include "acados_c/external_function_interface.h"
 
-#define TETHERUNIT_INTEGRATOR_NX     17
+#define TETHERUNIT_INTEGRATOR_NX     13
 #define TETHERUNIT_INTEGRATOR_NZ     0
 #define TETHERUNIT_INTEGRATOR_NU     1
 #define TETHERUNIT_INTEGRATOR_NP     0
-#define TETHERUNIT_INTEGRATOR_NBX    0
-#define TETHERUNIT_INTEGRATOR_NBX0   17
-#define TETHERUNIT_INTEGRATOR_NBU    0
+#define TETHERUNIT_INTEGRATOR_NBX    13
+#define TETHERUNIT_INTEGRATOR_NBX0   13
+#define TETHERUNIT_INTEGRATOR_NBU    1
 #define TETHERUNIT_INTEGRATOR_NSBX   0
 #define TETHERUNIT_INTEGRATOR_NSBU   0
 #define TETHERUNIT_INTEGRATOR_NSH    0
@@ -58,10 +58,10 @@
 #define TETHERUNIT_INTEGRATOR_NG     0
 #define TETHERUNIT_INTEGRATOR_NBXN   0
 #define TETHERUNIT_INTEGRATOR_NGN    0
-#define TETHERUNIT_INTEGRATOR_NY0    18
-#define TETHERUNIT_INTEGRATOR_NY     18
-#define TETHERUNIT_INTEGRATOR_NYN    17
-#define TETHERUNIT_INTEGRATOR_N      10000
+#define TETHERUNIT_INTEGRATOR_NY0    14
+#define TETHERUNIT_INTEGRATOR_NY     14
+#define TETHERUNIT_INTEGRATOR_NYN    13
+#define TETHERUNIT_INTEGRATOR_N      20
 #define TETHERUNIT_INTEGRATOR_NH     0
 #define TETHERUNIT_INTEGRATOR_NPHI   0
 #define TETHERUNIT_INTEGRATOR_NHN    0
@@ -91,8 +91,9 @@ typedef struct tetherunit_integrator_solver_capsule
     /* external functions */
     // dynamics
 
-    external_function_param_casadi *forw_vde_casadi;
-    external_function_param_casadi *expl_ode_fun;
+    external_function_param_casadi *impl_dae_fun;
+    external_function_param_casadi *impl_dae_fun_jac_x_xdot_z;
+    external_function_param_casadi *impl_dae_jac_x_xdot_u_z;
 
 
 

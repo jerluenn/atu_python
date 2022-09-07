@@ -23,7 +23,7 @@
     "parameter_values": [],
     "problem_class": "SIM",
     "solver_options": {
-        "Tsim": 0.00031,
+        "Tsim": 0.05,
         "collocation_type": "GAUSS_LEGENDRE",
         "integrator_type": "ERK",
         "output_z": false,

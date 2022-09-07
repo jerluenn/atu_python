@@ -230,7 +230,7 @@ if __name__ == "__main__":
    0.21544033, -1.91589977e-24, 5, 0, 0.05, 0]) 
     initConditions = np.array([0, 0, 0, 1, 0, 0, 0, robot_dict['tether_length']*robot_dict['mass_distribution']*9.81, -7.21548500e-26, -3.62844316e-33, 4.22730307e-26,
    0.21544033, -1.91589977e-24, 5, 0, 0.05, 0]) 
-    initConditions = np.array([0, 0, 0, 1, 0, 0, 0, 0.2915455717,   0.001093639063,     0.3170625413, -0.0002882279196,    0.05240783337, -2.706930693e-05, 5, 0, 0.05, 0]) 
+    initConditions = np.array([0, 0, 0, 1, 0, 0, 0, 0.1386458473,  5.394324155e-06,    0.03407331879, -3.025669809e-06,  -0.005150430889, -3.501944344e-07, 5, 0, 0.05, 0]) 
     distalPose = np.array([-0.6, 0, 0.485, 1, 0, 0, 0])
     testClass = TetherUnitBoundarySolver(robot_dict, initConditions, distalPose)
     # solveIteratively(testClass, initConditions, 10)
