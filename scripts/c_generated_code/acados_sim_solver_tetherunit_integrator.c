@@ -77,44 +77,34 @@ int tetherunit_integrator_acados_sim_create(sim_solver_capsule * capsule)
     bool tmp_bool;
 
     
-    double Tsim = 0.05;
+    double Tsim = 0.062;
 
     
-    capsule->sim_impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
-    capsule->sim_impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
-    capsule->sim_impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
+    // explicit ode
+    capsule->sim_forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
+    capsule->sim_expl_ode_fun_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi));
 
-    // external functions (implicit model)
-    capsule->sim_impl_dae_fun->casadi_fun  = &tetherunit_integrator_impl_dae_fun;
-    capsule->sim_impl_dae_fun->casadi_work = &tetherunit_integrator_impl_dae_fun_work;
-    capsule->sim_impl_dae_fun->casadi_sparsity_in = &tetherunit_integrator_impl_dae_fun_sparsity_in;
-    capsule->sim_impl_dae_fun->casadi_sparsity_out = &tetherunit_integrator_impl_dae_fun_sparsity_out;
-    capsule->sim_impl_dae_fun->casadi_n_in = &tetherunit_integrator_impl_dae_fun_n_in;
-    capsule->sim_impl_dae_fun->casadi_n_out = &tetherunit_integrator_impl_dae_fun_n_out;
-    external_function_param_casadi_create(capsule->sim_impl_dae_fun, np);
+    capsule->sim_forw_vde_casadi->casadi_fun = &tetherunit_integrator_expl_vde_forw;
+    capsule->sim_forw_vde_casadi->casadi_n_in = &tetherunit_integrator_expl_vde_forw_n_in;
+    capsule->sim_forw_vde_casadi->casadi_n_out = &tetherunit_integrator_expl_vde_forw_n_out;
+    capsule->sim_forw_vde_casadi->casadi_sparsity_in = &tetherunit_integrator_expl_vde_forw_sparsity_in;
+    capsule->sim_forw_vde_casadi->casadi_sparsity_out = &tetherunit_integrator_expl_vde_forw_sparsity_out;
+    capsule->sim_forw_vde_casadi->casadi_work = &tetherunit_integrator_expl_vde_forw_work;
+    external_function_param_casadi_create(capsule->sim_forw_vde_casadi, np);
 
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_fun = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_work = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_work;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_in = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_sparsity_in;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_sparsity_out = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_sparsity_out;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_n_in = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_n_in;
-    capsule->sim_impl_dae_fun_jac_x_xdot_z->casadi_n_out = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_n_out;
-    external_function_param_casadi_create(capsule->sim_impl_dae_fun_jac_x_xdot_z, np);
-
-    // external_function_param_casadi impl_dae_jac_x_xdot_u_z;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_fun = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_work = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_work;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_in = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_sparsity_in;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_sparsity_out = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_sparsity_out;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_n_in = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_n_in;
-    capsule->sim_impl_dae_jac_x_xdot_u_z->casadi_n_out = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_n_out;
-    external_function_param_casadi_create(capsule->sim_impl_dae_jac_x_xdot_u_z, np);
+    capsule->sim_expl_ode_fun_casadi->casadi_fun = &tetherunit_integrator_expl_ode_fun;
+    capsule->sim_expl_ode_fun_casadi->casadi_n_in = &tetherunit_integrator_expl_ode_fun_n_in;
+    capsule->sim_expl_ode_fun_casadi->casadi_n_out = &tetherunit_integrator_expl_ode_fun_n_out;
+    capsule->sim_expl_ode_fun_casadi->casadi_sparsity_in = &tetherunit_integrator_expl_ode_fun_sparsity_in;
+    capsule->sim_expl_ode_fun_casadi->casadi_sparsity_out = &tetherunit_integrator_expl_ode_fun_sparsity_out;
+    capsule->sim_expl_ode_fun_casadi->casadi_work = &tetherunit_integrator_expl_ode_fun_work;
+    external_function_param_casadi_create(capsule->sim_expl_ode_fun_casadi, np);
 
     
 
     // sim plan & config
     sim_solver_plan plan;
-    plan.sim_solver = IRK;
+    plan.sim_solver = ERK;
 
     // create correct config based on plan
     sim_config * tetherunit_integrator_sim_config = sim_config_create(plan);
@@ -156,11 +146,9 @@ int tetherunit_integrator_acados_sim_create(sim_solver_capsule * capsule)
 
     // model functions
     tetherunit_integrator_sim_config->model_set(tetherunit_integrator_sim_in->model,
-                 "impl_ode_fun", capsule->sim_impl_dae_fun);
+                 "expl_vde_for", capsule->sim_forw_vde_casadi);
     tetherunit_integrator_sim_config->model_set(tetherunit_integrator_sim_in->model,
-                 "impl_ode_fun_jac_x_xdot", capsule->sim_impl_dae_fun_jac_x_xdot_z);
-    tetherunit_integrator_sim_config->model_set(tetherunit_integrator_sim_in->model,
-                 "impl_ode_jac_x_xdot_u", capsule->sim_impl_dae_jac_x_xdot_u_z);
+                 "expl_ode_fun", capsule->sim_expl_ode_fun_casadi);
 
     // sim solver
     sim_solver *tetherunit_integrator_sim_solver = sim_solver_create(tetherunit_integrator_sim_config,
@@ -171,8 +159,8 @@ int tetherunit_integrator_acados_sim_create(sim_solver_capsule * capsule)
 
     /* initialize input */
     // x
-    double x0[13];
-    for (int ii = 0; ii < 13; ii++)
+    double x0[14];
+    for (int ii = 0; ii < 14; ii++)
         x0[ii] = 0.0;
 
     sim_in_set(tetherunit_integrator_sim_config, tetherunit_integrator_sim_dims,
@@ -188,11 +176,11 @@ int tetherunit_integrator_acados_sim_create(sim_solver_capsule * capsule)
                tetherunit_integrator_sim_in, "u", u0);
 
     // S_forw
-    double S_forw[182];
-    for (int ii = 0; ii < 182; ii++)
+    double S_forw[210];
+    for (int ii = 0; ii < 210; ii++)
         S_forw[ii] = 0.0;
-    for (int ii = 0; ii < 13; ii++)
-        S_forw[ii + ii * 13 ] = 1.0;
+    for (int ii = 0; ii < 14; ii++)
+        S_forw[ii + ii * 14 ] = 1.0;
 
 
     sim_in_set(tetherunit_integrator_sim_config, tetherunit_integrator_sim_dims,
@@ -227,9 +215,8 @@ int tetherunit_integrator_acados_sim_free(sim_solver_capsule *capsule)
     sim_config_destroy(capsule->acados_sim_config);
 
     // free external function
-    external_function_param_casadi_free(capsule->sim_impl_dae_fun);
-    external_function_param_casadi_free(capsule->sim_impl_dae_fun_jac_x_xdot_z);
-    external_function_param_casadi_free(capsule->sim_impl_dae_jac_x_xdot_u_z);
+    external_function_param_casadi_free(capsule->sim_forw_vde_casadi);
+    external_function_param_casadi_free(capsule->sim_expl_ode_fun_casadi);
 
     return 0;
 }
@@ -245,9 +232,8 @@ int tetherunit_integrator_acados_sim_update_params(sim_solver_capsule *capsule, 
             " External function has %i parameters. Exiting.\n", np, casadi_np);
         exit(1);
     }
-    capsule->sim_impl_dae_fun[0].set_param(capsule->sim_impl_dae_fun, p);
-    capsule->sim_impl_dae_fun_jac_x_xdot_z[0].set_param(capsule->sim_impl_dae_fun_jac_x_xdot_z, p);
-    capsule->sim_impl_dae_jac_x_xdot_u_z[0].set_param(capsule->sim_impl_dae_jac_x_xdot_u_z, p);
+    capsule->sim_forw_vde_casadi[0].set_param(capsule->sim_forw_vde_casadi, p);
+    capsule->sim_expl_ode_fun_casadi[0].set_param(capsule->sim_expl_ode_fun_casadi, p);
 
     return status;
 }

@@ -163,7 +163,7 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     {
         
         nlp_solver_plan->nlp_dynamics[i] = CONTINUOUS_MODEL;
-        nlp_solver_plan->sim_solver_plan[i].sim_solver = IRK;
+        nlp_solver_plan->sim_solver_plan[i].sim_solver = ERK;
     }
 
     for (int i = 0; i < N; i++)
@@ -289,39 +289,29 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     ************************************************/
 
 
-    // implicit dae
-    capsule->impl_dae_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    // explicit ode
+    capsule->forw_vde_casadi = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        capsule->impl_dae_fun[i].casadi_fun = &tetherunit_integrator_impl_dae_fun;
-        capsule->impl_dae_fun[i].casadi_work = &tetherunit_integrator_impl_dae_fun_work;
-        capsule->impl_dae_fun[i].casadi_sparsity_in = &tetherunit_integrator_impl_dae_fun_sparsity_in;
-        capsule->impl_dae_fun[i].casadi_sparsity_out = &tetherunit_integrator_impl_dae_fun_sparsity_out;
-        capsule->impl_dae_fun[i].casadi_n_in = &tetherunit_integrator_impl_dae_fun_n_in;
-        capsule->impl_dae_fun[i].casadi_n_out = &tetherunit_integrator_impl_dae_fun_n_out;
-        external_function_param_casadi_create(&capsule->impl_dae_fun[i], 0);
+        capsule->forw_vde_casadi[i].casadi_fun = &tetherunit_integrator_expl_vde_forw;
+        capsule->forw_vde_casadi[i].casadi_n_in = &tetherunit_integrator_expl_vde_forw_n_in;
+        capsule->forw_vde_casadi[i].casadi_n_out = &tetherunit_integrator_expl_vde_forw_n_out;
+        capsule->forw_vde_casadi[i].casadi_sparsity_in = &tetherunit_integrator_expl_vde_forw_sparsity_in;
+        capsule->forw_vde_casadi[i].casadi_sparsity_out = &tetherunit_integrator_expl_vde_forw_sparsity_out;
+        capsule->forw_vde_casadi[i].casadi_work = &tetherunit_integrator_expl_vde_forw_work;
+        external_function_param_casadi_create(&capsule->forw_vde_casadi[i], 0);
     }
 
-    capsule->impl_dae_fun_jac_x_xdot_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
+    capsule->expl_ode_fun = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
     for (int i = 0; i < N; i++) {
-        capsule->impl_dae_fun_jac_x_xdot_z[i].casadi_fun = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z;
-        capsule->impl_dae_fun_jac_x_xdot_z[i].casadi_work = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_work;
-        capsule->impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_in = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_sparsity_in;
-        capsule->impl_dae_fun_jac_x_xdot_z[i].casadi_sparsity_out = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_sparsity_out;
-        capsule->impl_dae_fun_jac_x_xdot_z[i].casadi_n_in = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_n_in;
-        capsule->impl_dae_fun_jac_x_xdot_z[i].casadi_n_out = &tetherunit_integrator_impl_dae_fun_jac_x_xdot_z_n_out;
-        external_function_param_casadi_create(&capsule->impl_dae_fun_jac_x_xdot_z[i], 0);
+        capsule->expl_ode_fun[i].casadi_fun = &tetherunit_integrator_expl_ode_fun;
+        capsule->expl_ode_fun[i].casadi_n_in = &tetherunit_integrator_expl_ode_fun_n_in;
+        capsule->expl_ode_fun[i].casadi_n_out = &tetherunit_integrator_expl_ode_fun_n_out;
+        capsule->expl_ode_fun[i].casadi_sparsity_in = &tetherunit_integrator_expl_ode_fun_sparsity_in;
+        capsule->expl_ode_fun[i].casadi_sparsity_out = &tetherunit_integrator_expl_ode_fun_sparsity_out;
+        capsule->expl_ode_fun[i].casadi_work = &tetherunit_integrator_expl_ode_fun_work;
+        external_function_param_casadi_create(&capsule->expl_ode_fun[i], 0);
     }
 
-    capsule->impl_dae_jac_x_xdot_u_z = (external_function_param_casadi *) malloc(sizeof(external_function_param_casadi)*N);
-    for (int i = 0; i < N; i++) {
-        capsule->impl_dae_jac_x_xdot_u_z[i].casadi_fun = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z;
-        capsule->impl_dae_jac_x_xdot_u_z[i].casadi_work = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_work;
-        capsule->impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_in = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_sparsity_in;
-        capsule->impl_dae_jac_x_xdot_u_z[i].casadi_sparsity_out = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_sparsity_out;
-        capsule->impl_dae_jac_x_xdot_u_z[i].casadi_n_in = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_n_in;
-        capsule->impl_dae_jac_x_xdot_u_z[i].casadi_n_out = &tetherunit_integrator_impl_dae_jac_x_xdot_u_z_n_out;
-        external_function_param_casadi_create(&capsule->impl_dae_jac_x_xdot_u_z[i], 0);
-    }
 
 
     /************************************************
@@ -336,7 +326,7 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     if (new_time_steps) {
         tetherunit_integrator_acados_update_time_steps(capsule, N, new_time_steps);
     } else {// all time_steps are identical
-        double time_step = 0.05;
+        double time_step = 0.062;
         for (int i = 0; i < N; i++)
         {
             ocp_nlp_in_set(nlp_config, nlp_dims, nlp_in, i, "Ts", &time_step);
@@ -347,11 +337,8 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     /**** Dynamics ****/
     for (int i = 0; i < N; i++)
     {
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "impl_dae_fun", &capsule->impl_dae_fun[i]);
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i,
-                                   "impl_dae_fun_jac_x_xdot_z", &capsule->impl_dae_fun_jac_x_xdot_z[i]);
-        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i,
-                                   "impl_dae_jac_x_xdot_u", &capsule->impl_dae_jac_x_xdot_u_z[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_vde_forw", &capsule->forw_vde_casadi[i]);
+        ocp_nlp_dynamics_model_set(nlp_config, nlp_dims, nlp_in, i, "expl_ode_fun", &capsule->expl_ode_fun[i]);
     
     }
 
@@ -451,6 +438,7 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     W_e[10+(NYN) * 10] = 1;
     W_e[11+(NYN) * 11] = 1;
     W_e[12+(NYN) * 12] = 1;
+    W_e[13+(NYN) * 13] = 1;
     ocp_nlp_cost_model_set(nlp_config, nlp_dims, nlp_in, N, "W", W_e);
     free(W_e);
     double* Vx_e = calloc(NYN*NX, sizeof(double));
@@ -487,6 +475,7 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     idxbx0[10] = 10;
     idxbx0[11] = 11;
     idxbx0[12] = 12;
+    idxbx0[13] = 13;
 
     double* lubx0 = calloc(2*NBX0, sizeof(double));
     double* lbx0 = lubx0;
@@ -494,18 +483,18 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     // change only the non-zero elements:
     lbx0[3] = 1;
     ubx0[3] = 1;
-    lbx0[7] = -2;
-    ubx0[7] = 2;
-    lbx0[8] = -2;
-    ubx0[8] = 2;
-    lbx0[9] = -2;
-    ubx0[9] = 2;
-    lbx0[10] = -2;
-    ubx0[10] = 2;
-    lbx0[11] = -2;
-    ubx0[11] = 2;
-    lbx0[12] = -2;
-    ubx0[12] = 2;
+    lbx0[7] = -5;
+    ubx0[7] = 5;
+    lbx0[8] = -5;
+    ubx0[8] = 5;
+    lbx0[9] = -5;
+    ubx0[9] = 5;
+    lbx0[10] = -5;
+    ubx0[10] = 5;
+    lbx0[11] = -5;
+    ubx0[11] = 5;
+    lbx0[12] = -5;
+    ubx0[12] = 5;
 
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "idxbx", idxbx0);
     ocp_nlp_constraints_model_set(nlp_config, nlp_dims, nlp_in, 0, "lbx", lbx0);
@@ -563,6 +552,7 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     idxbx[10] = 10;
     idxbx[11] = 11;
     idxbx[12] = 12;
+    idxbx[13] = 13;
     double* lubx = calloc(2*NBX, sizeof(double));
     double* lbx = lubx;
     double* ubx = lubx + NBX;
@@ -581,18 +571,19 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     ubx[5] = 1.05;
     lbx[6] = -1.05;
     ubx[6] = 1.05;
-    lbx[7] = -2;
-    ubx[7] = 2;
-    lbx[8] = -2;
-    ubx[8] = 2;
-    lbx[9] = -2;
-    ubx[9] = 2;
-    lbx[10] = -2;
-    ubx[10] = 2;
-    lbx[11] = -2;
-    ubx[11] = 2;
-    lbx[12] = -2;
-    ubx[12] = 2;
+    lbx[7] = -5;
+    ubx[7] = 5;
+    lbx[8] = -5;
+    ubx[8] = 5;
+    lbx[9] = -5;
+    ubx[9] = 5;
+    lbx[10] = -5;
+    ubx[10] = 5;
+    lbx[11] = -5;
+    ubx[11] = 5;
+    lbx[12] = -5;
+    ubx[12] = 5;
+    ubx[13] = 50;
 
     for (int i = 1; i < N; i++)
     {
@@ -667,7 +658,7 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     double nlp_solver_step_length = 1;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "step_length", &nlp_solver_step_length);
 
-    double levenberg_marquardt = 1;
+    double levenberg_marquardt = 10;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "levenberg_marquardt", &levenberg_marquardt);
 
     /* options QP solver */
@@ -694,7 +685,7 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     double nlp_solver_tol_comp = 0.000001;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "tol_comp", &nlp_solver_tol_comp);
 
-    int nlp_solver_max_iter = 8000;
+    int nlp_solver_max_iter = 2000;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "max_iter", &nlp_solver_max_iter);
 
     int initialize_t_slacks = 0;
@@ -722,12 +713,12 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     // initialize with x0
     
     x0[3] = 1;
-    x0[7] = -2;
-    x0[8] = -2;
-    x0[9] = -2;
-    x0[10] = -2;
-    x0[11] = -2;
-    x0[12] = -2;
+    x0[7] = -5;
+    x0[8] = -5;
+    x0[9] = -5;
+    x0[10] = -5;
+    x0[11] = -5;
+    x0[12] = -5;
 
 
     double* u0 = xu0 + NX;
@@ -802,13 +793,11 @@ int tetherunit_integrator_acados_free(tetherunit_integrator_solver_capsule * cap
     // dynamics
     for (int i = 0; i < N; i++)
     {
-        external_function_param_casadi_free(&capsule->impl_dae_fun[i]);
-        external_function_param_casadi_free(&capsule->impl_dae_fun_jac_x_xdot_z[i]);
-        external_function_param_casadi_free(&capsule->impl_dae_jac_x_xdot_u_z[i]);
+        external_function_param_casadi_free(&capsule->forw_vde_casadi[i]);
+        external_function_param_casadi_free(&capsule->expl_ode_fun[i]);
     }
-    free(capsule->impl_dae_fun);
-    free(capsule->impl_dae_fun_jac_x_xdot_z);
-    free(capsule->impl_dae_jac_x_xdot_u_z);
+    free(capsule->forw_vde_casadi);
+    free(capsule->expl_ode_fun);
 
     // cost
 
@@ -835,7 +824,7 @@ void tetherunit_integrator_acados_print_stats(tetherunit_integrator_solver_capsu
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "stat_m", &stat_m);
 
     
-    double stat[80000];
+    double stat[20000];
     ocp_nlp_get(capsule->nlp_config, capsule->nlp_solver, "statistics", stat);
 
     int nrow = sqp_iter+1 < stat_m ? sqp_iter+1 : stat_m;

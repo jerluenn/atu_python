@@ -211,21 +211,21 @@ class TetherUnit:
         n_dot = - (self._f_ext) + u
         m_dot = - cross(p_dot, self._n) 
         tau_dot = -self._Kappa*self._tau*norm_2(self._u)
-        alpha_dot = 1
+        # alpha_dot = 1
         kappa_dot = 0
         # u_dot = 0
-        # u_dot = norm_2(jacobian(self._u, self._m) @ m_dot + jacobian(self._u, self._eta) @ eta_dot)
-        u_dot = norm_2(inv(-self._Kbt)@((skew(self._u)@self._Kbt@self._u) + skew(self._v)@transpose(self._R)@self._n))
+        u_dot = norm_2(jacobian(self._u, self._m) @ m_dot + jacobian(self._u, self._eta) @ eta_dot)
+        # u_dot = norm_2(inv(-self._Kbt)@((skew(self._u)@self._Kbt@self._u) + skew(self._v)@transpose(self._R)@self._n))
 
-        # x = vertcat(self._p, self._eta, self._n, self._m, self._tau, self._alpha, self._Kappa, self._curvature)
-        # xdot = vertcat(p_dot, eta_dot,
-                    #    n_dot, m_dot, tau_dot, alpha_dot, kappa_dot, u_dot)
-        # x_dot_impl = vertcat(self._p_d, self._eta_d, self._n_d, self._m_d, self._tau_d, self._alpha_d, self._Kappa_d, self._curvature_d)
-        
-        x = vertcat(self._p, self._eta, self._n, self._m)
+        x = vertcat(self._p, self._eta, self._n, self._m, self._curvature)
         xdot = vertcat(p_dot, eta_dot,
-                       n_dot, m_dot)
-        x_dot_impl = vertcat(self._p_d, self._eta_d, self._n_d, self._m_d)
+                       n_dot, m_dot, u_dot)
+        x_dot_impl = vertcat(self._p_d, self._eta_d, self._n_d, self._m_d, self._curvature_d)
+        
+        # x = vertcat(self._p, self._eta, self._n, self._m)
+        # xdot = vertcat(p_dot, eta_dot,
+        #                n_dot, m_dot)
+        # x_dot_impl = vertcat(self._p_d, self._eta_d, self._n_d, self._m_d)
         
 
         self.model = AcadosModel()

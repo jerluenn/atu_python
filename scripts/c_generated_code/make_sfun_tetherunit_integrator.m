@@ -32,9 +32,8 @@
 %
 
 SOURCES = { ...
-            'tetherunit_integrator_model/tetherunit_integrator_impl_dae_fun.c', ...
-            'tetherunit_integrator_model/tetherunit_integrator_impl_dae_fun_jac_x_xdot_z.c', ...
-            'tetherunit_integrator_model/tetherunit_integrator_impl_dae_jac_x_xdot_u_z.c', ...
+            'tetherunit_integrator_model/tetherunit_integrator_expl_ode_fun.c', ...
+            'tetherunit_integrator_model/tetherunit_integrator_expl_vde_forw.c',...
             'acados_solver_sfunction_tetherunit_integrator.c', ...
             'acados_solver_tetherunit_integrator.c'
           };
@@ -75,25 +74,25 @@ fprintf('\n\nNote: Usage of Sfunction is as follows:\n')
 input_note = 'Inputs are:\n';
 i_in = 1;
 input_note = strcat(input_note, num2str(i_in), ') lbx_0 - lower bound on x for stage 0,',...
-                    ' size [13]\n ');
+                    ' size [14]\n ');
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') ubx_0 - upper bound on x for stage 0,',...
-                    ' size [13]\n ');
+                    ' size [14]\n ');
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [14]\n ');
+input_note = strcat(input_note, num2str(i_in), ') y_ref_0, size [15]\n ');
 i_in = i_in + 1;
 input_note = strcat(input_note, num2str(i_in), ') y_ref - concatenated for shooting nodes 1 to N-1,',...
-                    ' size [266]\n ');
+                    ' size [735]\n ');
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [13]\n ');
+input_note = strcat(input_note, num2str(i_in), ') y_ref_e, size [14]\n ');
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [247]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lbx for shooting nodes 1 to N-1, size [686]\n ');
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [247]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ubx for shooting nodes 1 to N-1, size [686]\n ');
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [20]\n ');
+input_note = strcat(input_note, num2str(i_in), ') lbu for shooting nodes 0 to N-1, size [50]\n ');
 i_in = i_in + 1;
-input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [20]\n ');
+input_note = strcat(input_note, num2str(i_in), ') ubu for shooting nodes 0 to N-1, size [50]\n ');
 i_in = i_in + 1;
 
 fprintf(input_note)
