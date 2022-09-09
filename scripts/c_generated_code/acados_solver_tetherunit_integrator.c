@@ -658,7 +658,7 @@ int tetherunit_integrator_acados_create_with_discretization(tetherunit_integrato
     double nlp_solver_step_length = 1;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "step_length", &nlp_solver_step_length);
 
-    double levenberg_marquardt = 10;
+    double levenberg_marquardt = 1;
     ocp_nlp_solver_opts_set(nlp_config, capsule->nlp_opts, "levenberg_marquardt", &levenberg_marquardt);
 
     /* options QP solver */

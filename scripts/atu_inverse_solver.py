@@ -54,7 +54,7 @@ class atu_solver:
         self.ocp.solver_options.qp_solver_iter_max = 400
         # self.ocp.solver_options.sim_method_num_steps = self.integration_steps
         self.ocp.solver_options.qp_solver_warm_start = 2
-        self.ocp.solver_options.levenberg_marquardt = 10.0
+        self.ocp.solver_options.levenberg_marquardt = 1.0
         self.ocp.solver_options.regularize_method = 'CONVEXIFY'
 
         self.ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # 
@@ -115,7 +115,7 @@ if __name__ == "__main__":
     solver_obj = atu_solver(robot_dict)
     solver, integrator = solver_obj.createSolver()
     yref = np.zeros((14, ))
-    yref[0:7] = -0.2, 0.5, 2.8, 1, 0, 0, 0
+    yref[0:7] = -0.5, 1.0, 2.4, 1, 0, 0, 0
     solver.cost_set(robot_dict['integration_steps'], 'yref', yref)
     start_time = time.time()
 
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
 
     solver.solve()
-    # solver.print_statistics()
+    solver.print_statistics()
     print(solver.get(0, "x"))
     print(solver.get(robot_dict['integration_steps'], "x"))
     print(solver.get_cost())
