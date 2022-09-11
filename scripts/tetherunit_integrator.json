@@ -1870,10 +1870,14 @@
         "initialize_t_slacks": 0,
         "integrator_type": "ERK",
 <<<<<<< HEAD
+<<<<<<< HEAD
         "levenberg_marquardt": 0.1,
 =======
         "levenberg_marquardt": 1.0,
 >>>>>>> f7e370a856251fcca6559f7036f6c7ed2f83f82c
+=======
+        "levenberg_marquardt": 1.0,
+>>>>>>> refs/remotes/origin/main
         "model_external_shared_lib_dir": null,
         "model_external_shared_lib_name": null,
         "nlp_solver_max_iter": 1,
