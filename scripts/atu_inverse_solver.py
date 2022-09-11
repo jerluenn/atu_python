@@ -54,7 +54,7 @@ class atu_solver:
         self.ocp.solver_options.qp_solver_iter_max = 400
         # self.ocp.solver_options.sim_method_num_steps = self.integration_steps
         self.ocp.solver_options.qp_solver_warm_start = 2
-        self.ocp.solver_options.levenberg_marquardt = 10.0
+        self.ocp.solver_options.levenberg_marquardt = 0.1
         self.ocp.solver_options.regularize_method = 'CONVEXIFY'
 
         self.ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # 
@@ -93,12 +93,13 @@ class atu_solver:
         self.ocp.constraints.lbu = np.array([0]) 
         self.ocp.constraints.idxbu = np.array([0])
 
-        self.ocp.solver_options.nlp_solver_max_iter = 2000
+        self.ocp.solver_options.nlp_solver_max_iter = 1
 
         solver = AcadosOcpSolver(self.ocp, json_file=f'{self.ocp.model.name}.json')
         integrator = AcadosSimSolver(self.ocp, json_file=f'{self.ocp.model.name}.json')
 
         return solver, integrator
+
 
 if __name__ == "__main__":
 
@@ -112,32 +113,60 @@ if __name__ == "__main__":
     robot_dict['shear_modulus'] = 0.75e9
     robot_dict['integration_steps'] = 50
 
+    NUM_ITERATIONS = 500
+
     solver_obj = atu_solver(robot_dict)
     solver, integrator = solver_obj.createSolver()
     yref = np.zeros((14, ))
-    yref[0:7] = -0.2, 0.5, 2.8, 1, 0, 0, 0
+    yref[0:7] = -robot_dict['tether_length']*0.8, 0.0, robot_dict['tether_length']*0.5, 1, 0, 0, 0
     solver.cost_set(robot_dict['integration_steps'], 'yref', yref)
-    start_time = time.time()
-
-    next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, 0.1386458473,  5.394324155e-06,    0.03407331879, -3.025669809e-06,  -0.005150430889, -3.501944344e-07, 0])
+    
+    # next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, robot_dict['tether_length']*robot_dict['mass_distribution']*9.81, -7.21548500e-26, -3.62844316e-33, 4.22730307e-26,
+#    0.278456470882048, -1.91589977e-24, 0]) 
+    next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, 1.35202744e-01,  8.59444117e-11,  1.38997104e-01, -3.21851497e-11,  6.09179901e-03, -5.40886376e-12, 0])
     solver.set(0, 'x', next_step_sol)
-
 
     for i in range(robot_dict['integration_steps']): 
 
         integrator.set('x', next_step_sol)
-        integrator.solve(), 1000, 5
+        integrator.solve()
         next_step_sol = integrator.get('x')
-        # print("next_step_sol: ", next_step_sol)
+        print("next_step_sol: ", next_step_sol)
         solver.set(i+1, 'x', next_step_sol)   
 
+    prev_sol = np.zeros((robot_dict['integration_steps'], 14))
 
-    solver.solve()
-    # solver.print_statistics()
+    for i in range(NUM_ITERATIONS):
+
+        solver.solve()
+
+
+
+        for i in range(robot_dict['integration_steps']): 
+
+            prev_sol[i, :] = solver.get(i, "x")
+
+    print(solver.get_cost())
+    print(solver.get(robot_dict['integration_steps'], "x"))
+
+    yref[0:7] = -robot_dict['tether_length']*0.4, -robot_dict['tether_length']*0.5, robot_dict['tether_length']*0.7, 1, 0, 0, 0
+    solver.cost_set(robot_dict['integration_steps'], 'yref', yref)
+
+    start_time = time.time()
+
+    for i in range(NUM_ITERATIONS):
+
+        solver.solve()
+
+    print(solver.get_cost())
+    print(solver.get(robot_dict['integration_steps'], "x"))
+
+    print(f"Total time (s): {time.time() - start_time}")
+
     print(solver.get(0, "x"))
     print(solver.get(robot_dict['integration_steps'], "x"))
     print(solver.get_cost())
     # print(solver.get_residuals())
     
 
-    print(f"Total time (s): {time.time() - start_time}")
+    
