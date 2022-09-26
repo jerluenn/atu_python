@@ -8,6 +8,7 @@ from std_msgs.msg import *
 
 import time
 import numpy as np
+import pyquaternion
 
 import sys
 sys.path.insert(0, '../src')
@@ -42,7 +43,7 @@ class wrench_solver:
             self.integrators_list.append(integrator)
 
             next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, 1.35202744e-01,  8.59444117e-11,  1.38997104e-01, -3.21851497e-11,  6.09179901e-03, -5.40886376e-12, 0])
-            next_step_sol[0:7] = ground_positions[i]
+            next_step_sol[0:7] = pos_w_p[i]
             self.solver.set(0, 'x', next_step_sol)
 
             for k in range(robot_dict['integration_steps']): 
@@ -54,18 +55,28 @@ class wrench_solver:
 
     def initialise_6dof_sensor(self, pos_centroid_d):
 
-        pass 
+        NUM_ITERATIONS = 1000
 
-        # for i in range(self.num_atu):
+        for i in range(self.num_atu):
 
-        #     self.pos_w_d[:, i] = self.pos_w_centroid + pos_centroid_d
+            self.pos_w_d[0:3, i] = self.pos_w_centroid + pos_centroid_d[0:3, i]
+            self.ref[0:7, i] = self.pos_w_d[0:7, i]
+            self.inverse_solvers_list[i].set(self.ref[:, i])
 
-    def add_vectors_different_frames(self, pose1, pose2):
+            for k in range(NUM_ITERATIONS):
 
-        pass 
+                self.inverse_solvers_list[i].solve()
+            
 
+    def initialiseSubscribers(self):
+
+        rospy.Subscriber('/relative_pose', PoseStamped, self.relative_pose_callback)
 
     def solve_structure_problem(self): 
+
+        pass 
+
+    def relative_pose_callback(self):
 
         pass 
 
@@ -83,5 +94,6 @@ if __name__ == "__main__":
     robot_dict['integration_steps'] = 50
 
     num_atu = 4 
-    ground_positions = np.array([[],[],[],[]])
-    wrench_solver(num_atu, ground_positions, 0, robot_dict, 0.0569)
+    ground_positions = np.array([[0., -0.15, 0., 1, 0, 0, 0],[0., 0., 0., 1, 0, 0, 0],[0., 0.15, 0., 1, 0, 0, 0],[0., 0.30, 0., 1, 0, 0, 0]])
+    centroid_distal_positions = np.array([[0.027, 0.015, -0.013, 1, 0, 0, 0], [-0.027, 0.015, -0.013, 1, 0, 0, 0], [0.027, -0.015, -0.013, 1, 0, 0, 0], [-0.027, -0.015, -0.013, 1, 0, 0, 0]])
+    wrench_solver(num_atu, ground_positions, centroid_distal_positions, robot_dict, 0.0569)
