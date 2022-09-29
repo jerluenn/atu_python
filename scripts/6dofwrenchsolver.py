@@ -101,7 +101,19 @@ class wrench_solver:
 
     def solve_structure_problem(self): 
 
-        pass 
+        self.wrench_numpy = np.zeros(6)
+
+        for i in range(self.num_atu):
+
+            self.wrench_numpy += self.wrench_list[i] 
+            self.wrench_numpy[3:6] += np.cross(self.quat.rotate(self.pos_centroid_d[i, 0:3]), self.wrench_list[i, 0:3])
+
+        self.wrench_msg.wrench.force.x = self.wrench_numpy[0]
+        self.wrench_msg.wrench.force.y = self.wrench_numpy[1]
+        self.wrench_msg.wrench.force.z = self.wrench_numpy[2]
+        self.wrench_msg.wrench.torque.x = self.wrench_numpy[3]
+        self.wrench_msg.wrench.torque.y = self.wrench_numpy[4]
+        self.wrench_msg.wrench.torque.z = self.wrench_numpy[5]
 
     def update_solver(self):
 
