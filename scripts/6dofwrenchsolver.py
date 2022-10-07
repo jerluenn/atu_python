@@ -25,6 +25,7 @@ class wrench_solver:
         self.friction_coefficient = friction_coefficient
         self.pos_w_centroid = np.array([-self.robot_dict['tether_length']*0.5, 0.0, self.robot_dict['tether_length']*0.8, 1, 0, 0, 0])
         self.pos_w_d = np.zeros((num_atu, 7))
+        self.initconditions = np.zeros((num_atu, 14))
         self.ref = np.zeros((num_atu, 14))
         self.wrench_list = np.zeros((num_atu, 6))
         self.pos_centroid_d = pos_centroid_d
@@ -52,6 +53,7 @@ class wrench_solver:
         self.inverse_solvers_list = []
         self.integrators_list = []
 
+        MAX_WRENCH = 10
 
         for i in range(self.num_atu):
              
@@ -60,9 +62,18 @@ class wrench_solver:
             self.inverse_solvers_list.append(solver)
             self.integrators_list.append(integrator)
 
-            next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, 1.35202744e-01,  8.59444117e-11,  1.38997104e-01, -3.21851497e-11,  6.09179901e-03, -5.40886376e-12, 0])
+            next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, 2.80607410e-01, 6.81042090e-02,  3.66954738e-01, -1.23376586e-02, 3.90957500e-02, -8.68201654e-04, -2.23278849e-11])
             next_step_sol[0:7] = pos_w_p[i]
+            lbx = np.array([0, 0, 0, 1, 0, 0, 0, 1.35202744e-01,  8.59444117e-11,  1.38997104e-01, -3.21851497e-11,  6.09179901e-03, -5.40886376e-12, 0])
+            lbx[0:7] = pos_w_p[i]
+            lbx[7:13] = -MAX_WRENCH, -MAX_WRENCH, -MAX_WRENCH, -MAX_WRENCH, -MAX_WRENCH, -MAX_WRENCH
+            ubx = np.array([0, 0, 0, 1, 0, 0, 0, 1.35202744e-01,  8.59444117e-11,  1.38997104e-01, -3.21851497e-11,  6.09179901e-03, -5.40886376e-12, 0])
+            ubx[0:7] = pos_w_p[i]
+            ubx[7:13] = MAX_WRENCH, MAX_WRENCH, MAX_WRENCH, MAX_WRENCH, MAX_WRENCH, MAX_WRENCH
+
             self.inverse_solvers_list[i].set(0, 'x', next_step_sol)
+            self.inverse_solvers_list[i].constraints_set(0, 'lbx', lbx)
+            self.inverse_solvers_list[i].constraints_set(0, 'ubx', ubx)
 
             for k in range(robot_dict['integration_steps']): 
 
@@ -108,6 +119,17 @@ class wrench_solver:
             self.wrench_numpy += self.wrench_list[i] 
             self.wrench_numpy[3:6] += np.cross(self.quat.rotate(self.pos_centroid_d[i, 0:3]), self.wrench_list[i, 0:3])
 
+        try:      
+
+            ### Over here, we transform to body frame to compare with results from wrench sensor. 
+
+            self.wrench_numpy[0:3] = self.quat.inverse.rotate(self.wrench_numpy[0:3])
+            self.wrench_numpy[3:6] = self.quat.inverse.rotate(self.wrench_numpy[3:6])
+
+        except:
+
+            pass
+
         self.wrench_msg.wrench.force.x = self.wrench_numpy[0]
         self.wrench_msg.wrench.force.y = self.wrench_numpy[1]
         self.wrench_msg.wrench.force.z = self.wrench_numpy[2]
@@ -124,6 +146,7 @@ class wrench_solver:
             self.quat[2] = self.pos_w_centroid[5]
             self.quat[3] = self.pos_w_centroid[6]
             self.ref[i, 0:3] = self.pos_w_centroid[0:3] + self.quat.rotate(self.pos_centroid_d[i, 0:3])
+            self.ref[i, 3:7] = self.quat[0], self.quat[1], self.quat[2], self.quat[3]
             self.inverse_solvers_list[i].set(self.robot_dict['integration_steps'], 'yref', self.ref[i, :])
             self.inverse_solvers_list[i].solve()
             self.wrench_list[i, :] = self.inverse_solvers_list[i].get(self.robot_dict['integration_steps'], 'x')[7:13]
@@ -149,6 +172,8 @@ class wrench_solver:
         self.pos_w_centroid_optitrack[5] = data.pose.orientation.y
         self.pos_w_centroid_optitrack[6] = data.pose.orientation.z
 
+        time.sleep(0.0001)
+
         self.medianFilterStep()
 
     def mainLoop(self): 
@@ -170,13 +195,13 @@ if __name__ == "__main__":
     robot_dict['type'] = 'hollow_rod'
     robot_dict['outer_radius'] = 0.002
     robot_dict['inner_radius'] = 0.0006
-    robot_dict['elastic_modulus'] = 1.80e9
+    robot_dict['elastic_modulus'] = 1.0e9
     robot_dict['mass_distribution'] = 0.035
     robot_dict['tether_length'] = 3.1
     robot_dict['shear_modulus'] = 0.75e9
     robot_dict['integration_steps'] = 50
 
     num_atu = 4 
-    ground_positions = np.array([[0., -0.15, 0., 1, 0, 0, 0],[0., 0., 0., 1, 0, 0, 0],[0., 0.15, 0., 1, 0, 0, 0],[0., 0.30, 0., 1, 0, 0, 0]])
-    centroid_distal_positions = np.array([[0.027, 0.015, -0.013, 1, 0, 0, 0], [-0.027, 0.015, -0.013, 1, 0, 0, 0], [0.027, -0.015, -0.013, 1, 0, 0, 0], [-0.027, -0.015, -0.013, 1, 0, 0, 0]])
+    ground_positions = np.array([[0., 0.15, 0., 1, 0, 0, 0],[0., 0., 0., 1, 0, 0, 0],[0., -0.15, 0., 1, 0, 0, 0],[0., -0.30, 0., 1, 0, 0, 0]])
+    centroid_distal_positions = np.array([[0.027, 0.015, -0.023, 1, 0, 0, 0], [-0.027, 0.015, -0.023, 1, 0, 0, 0], [0.027, -0.015, -0.023, 1, 0, 0, 0], [-0.027, -0.015, -0.023, 1, 0, 0, 0]])
     wrench_solver(num_atu, ground_positions, centroid_distal_positions, robot_dict, 0.0569)

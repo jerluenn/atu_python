@@ -57,9 +57,9 @@ class atu_solver:
 
         self.ocp.solver_options.levenberg_marquardt = 0.1
 
-        self.ocp.solver_options.levenberg_marquardt = 1.0
+        # self.ocp.solver_options.levenberg_marquardt = 1.0
 
-        self.ocp.solver_options.levenberg_marquardt = 1.0
+        # self.ocp.solver_options.levenberg_marquardt = 1.0
         self.ocp.solver_options.regularize_method = 'CONVEXIFY'
 
         self.ocp.solver_options.qp_solver = 'PARTIAL_CONDENSING_HPIPM' # 
@@ -112,13 +112,13 @@ if __name__ == "__main__":
     robot_dict['type'] = 'hollow_rod'
     robot_dict['outer_radius'] = 0.002
     robot_dict['inner_radius'] = 0.0006
-    robot_dict['elastic_modulus'] = 1.80e9
+    robot_dict['elastic_modulus'] = 1.0e9
     robot_dict['mass_distribution'] = 0.035
     robot_dict['tether_length'] = 3.1
     robot_dict['shear_modulus'] = 0.75e9
     robot_dict['integration_steps'] = 50
 
-    NUM_ITERATIONS = 500
+    NUM_ITERATIONS = 5000
 
     solver_obj = atu_solver(robot_dict)
     solver, integrator = solver_obj.createSolver()
@@ -128,9 +128,8 @@ if __name__ == "__main__":
 
     solver.cost_set(robot_dict['integration_steps'], 'yref', yref)
     
-    # next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, robot_dict['tether_length']*robot_dict['mass_distribution']*9.81, -7.21548500e-26, -3.62844316e-33, 4.22730307e-26,
-#    0.278456470882048, -1.91589977e-24, 0]) 
-    next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, 1.35202744e-01,  8.59444117e-11,  1.38997104e-01, -3.21851497e-11,  6.09179901e-03, -5.40886376e-12, 0])
+    next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, robot_dict['tether_length']*robot_dict['mass_distribution']*9.81, -7.21548500e-26, -3.62844316e-33, 4.22730307e-26, 0.1611493627, -1.91589977e-24, 0]) 
+    # next_step_sol = np.array([0, 0, 0, 1, 0, 0, 0, 1.35202744e-01,  8.59444117e-11,  1.38997104e-01, -3.21851497e-11,  6.09179901e-03, -5.40886376e-12, 0])
     solver.set(0, 'x', next_step_sol)
 
     for i in range(robot_dict['integration_steps']): 
@@ -147,8 +146,6 @@ if __name__ == "__main__":
 
         solver.solve()
 
-
-
         for i in range(robot_dict['integration_steps']): 
 
             prev_sol[i, :] = solver.get(i, "x")
@@ -156,7 +153,7 @@ if __name__ == "__main__":
     print(solver.get_cost())
     print(solver.get(robot_dict['integration_steps'], "x"))
 
-    yref[0:7] = -robot_dict['tether_length']*0.4, -robot_dict['tether_length']*0.5, robot_dict['tether_length']*0.7, 1, 0, 0, 0
+    yref[0:7] = -1.17, 0.40, 2.49, 1, 0, 0, 0
     solver.cost_set(robot_dict['integration_steps'], 'yref', yref)
 
     start_time = time.time()
