@@ -126,9 +126,16 @@ class wrench_solver:
             self.wrench_numpy[0:3] = self.quat.inverse.rotate(self.wrench_numpy[0:3])
             self.wrench_numpy[3:6] = self.quat.inverse.rotate(self.wrench_numpy[3:6])
 
+            pass
+
         except:
 
             pass
+
+        R_sensor_body = np.array([[0, -1, 0],[-1, 0, 0],[0, 0, 1]])
+
+        self.wrench_numpy[0:3] = R_sensor_body@self.wrench_numpy[0:3]
+        self.wrench_numpy[3:6] = R_sensor_body@self.wrench_numpy[3:6]
 
         self.wrench_msg.wrench.force.x = self.wrench_numpy[0]
         self.wrench_msg.wrench.force.y = self.wrench_numpy[1]
@@ -168,9 +175,9 @@ class wrench_solver:
         self.pos_w_centroid_optitrack[1] = data.pose.position.y
         self.pos_w_centroid_optitrack[2] = data.pose.position.z
         self.pos_w_centroid_optitrack[3] = np.abs(data.pose.orientation.w)
-        self.pos_w_centroid_optitrack[4] = data.pose.orientation.x
-        self.pos_w_centroid_optitrack[5] = data.pose.orientation.y
-        self.pos_w_centroid_optitrack[6] = data.pose.orientation.z
+        self.pos_w_centroid_optitrack[4] = np.sign(data.pose.orientation.w)*data.pose.orientation.x
+        self.pos_w_centroid_optitrack[5] = np.sign(data.pose.orientation.w)*data.pose.orientation.y
+        self.pos_w_centroid_optitrack[6] = np.sign(data.pose.orientation.w)*data.pose.orientation.z
 
         time.sleep(0.0001)
 
