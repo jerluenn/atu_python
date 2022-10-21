@@ -33,6 +33,10 @@ class wrench_solver_continuum_robot:
         self.pos_w_centroid_optitrack = np.zeros(7)
         self.quat = Quat([1, 0, 0, 0])
         self.wrench_msg = WrenchStamped()
+        self.desired_tenions_msg = Float64MultiArray()
+        self.curvature = np.zeros(num_atu)
+        self.median_k = 0 
+        self.median_loadcell_measurements = np.zeros((7, num_atu))
 
         self.initialise_inverse_solvers(pos_w_p)
         self.initialise_6dof_sensor(pos_centroid_d) 
@@ -74,7 +78,7 @@ class wrench_solver_continuum_robot:
             self.inverse_solvers_list[i].constraints_set(0, 'lbx', lbx)
             self.inverse_solvers_list[i].constraints_set(0, 'ubx', ubx)
 
-            for k in range(robot_dict['integration_steps']): 
+            for k in range(self.robot_dict['integration_steps']): 
 
                 self.integrators_list[i].set('x', next_step_sol)
                 self.integrators_list[i].solve()
@@ -101,18 +105,22 @@ class wrench_solver_continuum_robot:
 
         rospy.Subscriber('/relative_pose', PoseStamped, self.relative_pose_callback)
         rospy.Subscriber('/loadcell_measurements', Float64MultiArray, self.load_cell_measurements_callback)
+        rospy.Subscriber('/desired_tension', Float64MultiArray, self.update_desired_tensions_callback)
 
     def initialisePublishers(self):
 
         self.wrench_publisher = rospy.Publisher('/estimated_wrench', WrenchStamped, queue_size=1)
+        self.desired_tension_publisher = rospy.Publisher('/desired_tension_updated', Float64MultiArray, queue_size=1)
+        self.curvature_publisher = rospy.Publisher('/curvature', Float64, queue_size=1)
 
     def publish_data(self): 
 
         self.wrench_publisher.publish(self.wrench_msg)
 
-    def compute_distal_tension(self): 
+    def update_desired_tensions_callback(self, solver_msg):
 
-        pass
+        self.desired_tenions_msg.data = solver_msg.data * (1/np.e**(-self.friction_coefficient*self.curvature))
+        self.desired_tension_publisher.publish(self.desired_tenions_msg)
 
     def solve_structure_problem(self): 
 
@@ -152,6 +160,10 @@ class wrench_solver_continuum_robot:
         self.wrench_msg.wrench.torque.y = self.wrench_numpy[4]
         self.wrench_msg.wrench.torque.z = self.wrench_numpy[5]
 
+    def solve_distal_tension(self):
+    
+        self.distal_tension = self.loadcell_measurements_filtered*np.e**(-self.friction_coefficient*self.curvature)
+
     def update_solver(self):
 
         for i in range(self.num_atu): 
@@ -166,18 +178,29 @@ class wrench_solver_continuum_robot:
             self.inverse_solvers_list[i].solve()
             self.wrench_list[i, :] = self.inverse_solvers_list[i].get(self.robot_dict['integration_steps'], 'x')[7:13]
 
+        self.update_curvatures()
+        self.solve_distal_tension()
         self.solve_structure_problem()
 
-    def medianFilterStep(self): 
+    def medianFilterStep_optitrack(self): 
 
         self.median_pose[self.median_i%7, :] = self.pos_w_centroid_optitrack
         self.median_i += 1
         self.pos_w_centroid = np.median(self.median_pose[:, 0]), np.median(self.median_pose[:, 1]), np.median(self.median_pose[:, 2]),\
         np.median(self.median_pose[:, 3]), np.median(self.median_pose[:, 4]), np.median(self.median_pose[:, 5]), np.median(self.median_pose[:, 6])
 
+    def medianFilterStep_loadcell(self): 
+
+        self.median_loadcell_measurements[self.median_k%7, :] = self.load_cell_measurements
+        self.median_k += 1 
+        self.load_cell_measurements_filtered = np.median(self.median_loadcell_measurements, 0)
+
     def load_cell_measurements_callback(self, data): 
 
         self.load_cell_measurements = np.array([i for i in data.data]) 	
+        self.load_cell_measurements *= (9.81/1000)
+
+        self.medianFilterStep_loadcell()
 
     def relative_pose_callback(self, data):
 
@@ -191,7 +214,7 @@ class wrench_solver_continuum_robot:
 
         time.sleep(0.0001)
 
-        self.medianFilterStep()
+        self.medianFilterStep_optitrack()
 
     def mainLoop(self): 
 
@@ -221,4 +244,4 @@ if __name__ == "__main__":
     num_atu = 4 
     ground_positions = np.array([[0., 0.15, 0., 1, 0, 0, 0],[0., 0., 0., 1, 0, 0, 0],[0., -0.15, 0., 1, 0, 0, 0],[0., -0.30, 0., 1, 0, 0, 0]])
     centroid_distal_positions = np.array([[0.027, 0.015, -0.023, 1, 0, 0, 0], [-0.027, 0.015, -0.023, 1, 0, 0, 0], [0.027, -0.015, -0.023, 1, 0, 0, 0], [-0.027, -0.015, -0.023, 1, 0, 0, 0]])
-    wrench_solver(num_atu, ground_positions, centroid_distal_positions, robot_dict, 0.0569)
+    wrench_solver_continuum_robot(num_atu, ground_positions, centroid_distal_positions, robot_dict, 0.0569)
